@@ -45,12 +45,12 @@ class CommOp:
 class AllReduce(CommOp):
     def __call__(self, tensor: torch.Tensor):
         tensor_out = tensor.contiguous()
-        dist.all_reduce(tensor_out)
+        dist.all_reduce(tensor_out)  # op=dist.ReduceOp.SUM
 
     def bw_factor(self):
         return 2 * (self.world_size - 1) / self.world_size
 
-
+# Gather All-to-one
 class AllGather(CommOp):
     def __call__(self, tensor: torch.Tensor) -> None:
         input_chunks = list(torch.chunk(tensor, self.world_size, dim=0))
@@ -58,8 +58,20 @@ class AllGather(CommOp):
 
     def bw_factor(self):
         return (self.world_size - 1) / self.world_size
+    
+# Gather All-to-one 
+class AllGather_(CommOp):
+    def __call__(self, tensor: torch.Tensor) -> None:
+        # 初始化用于收集数据的张量列表 8
+        gathered_data = list(torch.chunk(tensor, self.world_size, dim=0))
+        # 定义本地进程的输入张量 1
+        local_data = torch.empty_like(gathered_data[0])
+        dist.all_gather(gathered_data, local_data)
 
+    def bw_factor(self):
+        return (self.world_size - 1) / self.world_size
 
+# Scatter One-to-all
 class ReduceScatter(CommOp):
     def __call__(self, tensor: torch.Tensor) -> None:
         input_chunks = list(torch.chunk(tensor, self.world_size, dim=0))
@@ -69,11 +81,36 @@ class ReduceScatter(CommOp):
     def bw_factor(self):
         return (self.world_size - 1) / self.world_size
 
+class BroadCast(CommOp):
+    def __call__(self, tensor: torch.Tensor) -> None:
+        # input_chunks = list(torch.chunk(tensor, self.world_size, dim=0))
+        dist.broadcast(tensor, src=0)
+
+    def bw_factor(self):
+        return (self.world_size - 1) / self.world_size
+
+class All2All(CommOp):
+    def __call__(self, tensor: torch.Tensor):
+        # input_chunks = list(torch.chunk(tensor, self.world_size, dim=0))
+        # local_data = list(torch.chunk(tensor, self.world_size, dim=0))
+        # output_data = torch.zeros(self.world_size)
+        
+        local_data = list(torch.chunk(tensor, self.world_size, dim=0))
+        output_data = list(torch.chunk(tensor, self.world_size, dim=0))
+        
+        dist.all_to_all(output_data, local_data)  # many to many
+        
+    def bw_factor(self):
+        return (self.world_size - 1) / self.world_size
+
+
 
 OPS = {
-    'allreduce': AllReduce,
-    'allgather': AllGather,
+    'allreduce': AllReduce,  # 规约, 加,乘,MIN,MAX
+    'allgather': AllGather_, # all_gather用于在所有分布式进程之间收集张量数据
     'reducescatter': ReduceScatter,
+    'broadcast': BroadCast,
+    'all2all': All2All,  # 每个节点之间交换张量的不同部分
 }
 
 
@@ -148,6 +185,7 @@ if __name__ == '__main__':
         sizes = []
         start = parse_size(args.begin)
         end = parse_size(args.end)
+        print(f"curr_start={start}, curr_end={end}")
         while start <= end:
             sizes.append(start)
             start *= args.factor

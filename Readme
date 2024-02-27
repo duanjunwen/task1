@@ -1,4 +1,4 @@
- torchrun --nproc_per_node 8 test_dist.py -b 2M -e 256M -f 2
+ torchrun --nproc_per_node 8 test_dist.py -a allreduce -b 2M -e 256M -f 2
 [2024-02-26 18:22:22,112] torch.distributed.run: [WARNING] 
 [2024-02-26 18:22:22,112] torch.distributed.run: [WARNING] *****************************************
 [2024-02-26 18:22:22,112] torch.distributed.run: [WARNING] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
@@ -16,3 +16,52 @@
 | 268435456 |     67108864    | torch.float32 |   3.02   |    82.84    |    144.97   |
 +-----------+-----------------+---------------+----------+-------------+-------------+
 Average busbw: 127.804 GB/s
+
+
+torchrun --nproc_per_node 8 test_dist.py -a BroadCast
+[2024-02-27 11:17:04,827] torch.distributed.run: [WARNING] 
+[2024-02-27 11:17:04,827] torch.distributed.run: [WARNING] *****************************************
+[2024-02-27 11:17:04,827] torch.distributed.run: [WARNING] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+[2024-02-27 11:17:04,827] torch.distributed.run: [WARNING] *****************************************
++----------+-----------------+---------------+----------+-------------+-------------+
+| size(B)  | count(elements) |      type     | time(ms) | algbw(GB/s) | busbw(GB/s) |
++----------+-----------------+---------------+----------+-------------+-------------+
+| 33554432 |     8388608     | torch.float32 |   0.30   |    102.53   |    89.72    |
++----------+-----------------+---------------+----------+-------------+-------------+
+Average busbw: 89.716 GB/s
+
+
+[2024-02-27 11:20:52,328] torch.distributed.run: [WARNING] 
+[2024-02-27 11:20:52,328] torch.distributed.run: [WARNING] *****************************************
+[2024-02-27 11:20:52,328] torch.distributed.run: [WARNING] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+[2024-02-27 11:20:52,328] torch.distributed.run: [WARNING] *****************************************
++----------+-----------------+---------------+----------+-------------+-------------+
+| size(B)  | count(elements) |      type     | time(ms) | algbw(GB/s) | busbw(GB/s) |
++----------+-----------------+---------------+----------+-------------+-------------+
+| 33554432 |     8388608     | torch.float32 |   0.35   |    88.11    |    77.10    |
++----------+-----------------+---------------+----------+-------------+-------------+
+Average busbw: 77.098 GB/s
+
+torchrun --nproc_per_node 8 test_dist.py -a all2all
+[2024-02-27 11:25:08,131] torch.distributed.run: [WARNING] 
+[2024-02-27 11:25:08,131] torch.distributed.run: [WARNING] *****************************************
+[2024-02-27 11:25:08,131] torch.distributed.run: [WARNING] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+[2024-02-27 11:25:08,131] torch.distributed.run: [WARNING] *****************************************
++----------+-----------------+---------------+----------+-------------+-------------+
+| size(B)  | count(elements) |      type     | time(ms) | algbw(GB/s) | busbw(GB/s) |
++----------+-----------------+---------------+----------+-------------+-------------+
+| 33554432 |     8388608     | torch.float32 |   0.27   |    114.54   |    100.23   |
++----------+-----------------+---------------+----------+-------------+-------------+
+Average busbw: 100.226 GB/s
+
+torchrun --nproc_per_node 8 test_dist.py -a allgather
+[2024-02-27 11:49:26,766] torch.distributed.run: [WARNING] 
+[2024-02-27 11:49:26,766] torch.distributed.run: [WARNING] *****************************************
+[2024-02-27 11:49:26,766] torch.distributed.run: [WARNING] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+[2024-02-27 11:49:26,766] torch.distributed.run: [WARNING] *****************************************
++----------+-----------------+---------------+----------+-------------+-------------+
+| size(B)  | count(elements) |      type     | time(ms) | algbw(GB/s) | busbw(GB/s) |
++----------+-----------------+---------------+----------+-------------+-------------+
+| 33554432 |     8388608     | torch.float32 |   0.38   |    81.58    |    71.38    |
++----------+-----------------+---------------+----------+-------------+-------------+
+Average busbw: 71.382 GB/s
